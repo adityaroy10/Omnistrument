@@ -85,4 +85,6 @@ Have an idea or found a bug? **[Open an issue](https://github.com/adityaroy10/Om
 
 ## License
 
-MIT
+Copyright (c) 2026 Aditya Roy. All Rights Reserved.
+
+This software and its source code are proprietary. No part of this codebase may be copied, modified, distributed, or used in any form without explicit written permission from the author.
