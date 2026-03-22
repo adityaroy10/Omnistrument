@@ -1,46 +1,75 @@
 export function detectPitch(buffer: Float32Array, sampleRate: number): number | null {
-  // Simple Autocorrelation Pitch Detection - OPTIMIZED
-  // Only analyze a subset of the audio to prevent UI freezing.
-  // 50Hz = 20ms period = ~882 samples. 4096 samples provides a great window for pitch detection
-  const windowSize = Math.min(buffer.length, 4096); 
-  const maxOffset = Math.min(buffer.length, Math.floor(sampleRate / 50)); // Don't look lower than 50Hz context
-
-  let maxVal = -1;
-  let maxStrPos = -1;
+  // YIN Pitch Detection Algorithm - heavily mitigates octave errors compared to raw AC
+  const windowSize = Math.min(buffer.length, 4096); // Extended to 4096 to allow detecting sub-bass down to ~21Hz
+  const halfWindow = Math.floor(windowSize / 2);
+  const yinBuffer = new Float32Array(halfWindow);
+  
+  // 0. RMS Gate check - signal too quiet?
   let rms = 0;
-
   for (let i = 0; i < windowSize; i++) {
     rms += buffer[i] * buffer[i];
   }
   rms = Math.sqrt(rms / windowSize);
-  if (rms < 0.01) return null; // Signal too quiet
+  if (rms < 0.01) return null;
 
-  let foundZeroCross = false;
-  for (let offset = 0; offset < maxOffset; offset++) {
-    let corr = 0;
-    for (let i = 0; i < windowSize; i++) {
-        // Prevent out of bounds
-        if (i + offset < buffer.length) {
-            corr += buffer[i] * buffer[i + offset];
-        }
-    }
-    
-    // Ignore the peak at offset 0
-    if (offset > 0 && corr < 0) {
-      foundZeroCross = true;
-    }
-    
-    if (foundZeroCross && corr > maxVal) {
-      maxVal = corr;
-      maxStrPos = offset;
-    }
+  // 1. Difference Function
+  for (let tau = 0; tau < halfWindow; tau++) {
+      let sum = 0;
+      for (let i = 0; i < halfWindow; i++) {
+          const delta = buffer[i] - buffer[i + tau];
+          sum += delta * delta;
+      }
+      yinBuffer[tau] = sum;
   }
 
-  if (maxStrPos === -1) return null;
-  const pitch = sampleRate / maxStrPos;
+  // 2. Cumulative Mean Normalized Difference Function (CMNDF)
+  yinBuffer[0] = 1;
+  let runningSum = 0;
+  for (let tau = 1; tau < halfWindow; tau++) {
+      runningSum += yinBuffer[tau];
+      yinBuffer[tau] = yinBuffer[tau] * tau / (runningSum + 1e-10); // Prevent div by 0
+  }
+
+  // 3. Absolute Thresholding (Find first dip below 0.15)
+  const threshold = 0.15;
+  let tauEstimate = -1;
+  for (let tau = 2; tau < halfWindow; tau++) {
+      if (yinBuffer[tau] < threshold) {
+          // Find local minimum around this dip
+          while (tau + 1 < halfWindow && yinBuffer[tau + 1] < yinBuffer[tau]) {
+              tau++;
+          }
+          tauEstimate = tau;
+          break;
+      }
+  }
+
+  // Fallback: If no pitch passes the strict threshold, use the global minimum.
+  if (tauEstimate === -1) {
+      let minVal = Infinity;
+      for (let tau = 2; tau < halfWindow; tau++) {
+          if (yinBuffer[tau] < minVal) {
+              minVal = yinBuffer[tau];
+              tauEstimate = tau;
+          }
+      }
+      // If the best estimate is terrible, return null (it's unpitched noise)
+      if (minVal > 0.5) return null; // Reverted back to 0.5 for cleaner results
+  }
+
+  // 4. Parabolic Interpolation (Refines the pitch accuracy)
+  let betterTau = tauEstimate;
+  if (tauEstimate > 0 && tauEstimate < halfWindow - 1) {
+      const s0 = yinBuffer[tauEstimate - 1];
+      const s1 = yinBuffer[tauEstimate];
+      const s2 = yinBuffer[tauEstimate + 1];
+      betterTau = tauEstimate + 0.5 * (s0 - s2) / (s0 - 2 * s1 + s2 + 1e-10);
+  }
+
+  const pitch = sampleRate / betterTau;
   
-  // Guard against unrealistic high pitches from noise
-  if (pitch > 3000) return null; 
+  // Reject unrealistic pitches
+  if (pitch > 3000 || pitch < 20) return null; 
   
   return pitch;
 }
