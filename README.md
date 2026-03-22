@@ -1,10 +1,10 @@
-# 🎹 Omnistrument
+# Omnistrument
 
 **A browser-based synthesizer that transforms everyday sounds into playable digital instruments.**
 
-Record any sound, map it across a virtual keyboard, sculpt it with DSP effects, and export a studio-ready `.sfz` file for your DAW — all without installing a single app.
+Record any sound, map it across a virtual keyboard, sculpt it with DSP effects, and export a studio-ready `.sfz` file for your DAW, all without installing a single app.
 
-🔗 **[Try it live →](https://omnistrument.vercel.app)**
+**[Try it live](https://omnistrument.vercel.app)**
 
 ---
 
@@ -12,23 +12,41 @@ Record any sound, map it across a virtual keyboard, sculpt it with DSP effects, 
 
 ---
 
-## ✨ Features
+## Features
 
-- 🎤 **Record** any audio directly in the browser
-- 🎹 **Map** your recording across a full musical keyboard with intelligent pitch-shifting
-- 🎛️ **Shape** your sound with built-in DSP effects (reverb, filter, ADSR envelope)
-- 💾 **Export** a portable `.sfz` instrument file compatible with any major DAW
-- ⚡ **Real-time** pitch detection powered by the YIN algorithm — no backend, no latency
+- **Record** any audio directly in the browser
+- **Map** your recording across a full musical keyboard with intelligent pitch-shifting
+- **Shape** your sound with built-in DSP effects (reverb, filter, ADSR envelope)
+- **Export** a portable `.sfz` instrument file compatible with any major DAW
+- **Real-time** pitch detection powered by the YIN algorithm, no backend required
 
 ---
 
-## 🔬 How Pitch Detection Works
+## What Makes Omnistrument Different
+
+The browser-based audio tool landscape falls into three camps, and Omnistrument doesn't fit neatly into any of them:
+
+| Tool Type | Example | Limitation |
+|---|---|---|
+| Basic web samplers | Soundation, online beatmakers | Pitch a single sample, causing "chipmunking" at extremes. No DSP controls. |
+| Browser DAWs | Soundtrap, Amped Studio | Powerful but heavy, require accounts, and trap your work in their cloud. |
+| AI voice modifiers | VoIP changers | Black-box results, no manual sound-sculpting control. |
+
+Omnistrument hits a "Goldilocks" zone: professional instrument design with the immediacy of a web toy.
+
+- **Multi-Sampling** — Most web tools pitch a single recording up and down. Omnistrument lets you record multiple notes to create intelligent split-points, preventing pitch degradation at extremes. This is a professional feature rarely seen in instant web tools.
+- **Harmonic Sculpting** — Direct control over individual overtones/harmonics via sliders. A fast, visual way to apply real additive synthesis to a live recording.
+- **SFZ Export** — Most browser tools trap your creation inside their website. Omnistrument generates a standard `.sfz` file you can drag directly into Ableton, Logic, or FL Studio. Zero lock-in, professional output.
+
+---
+
+## How Pitch Detection Works
 
 Omnistrument uses the **YIN algorithm** to detect the fundamental frequency of your recorded sample in real time. This allows the app to correctly shift the pitch of your recording when you play different notes on the keyboard.
 
 ### Why YIN and not CREPE or another deep learning model?
 
-The Web Audio API processes audio in fixed-size buffers (~92 ms at 4096 samples / 44.1 kHz). A pitch detector must run **faster than the buffer arrives** to avoid dropped frames. CREPE requires a ~90 MB model download and takes 80–150 ms per frame in WebAssembly — far too slow. YIN runs in **< 20 ms** and achieves comparable accuracy.
+The Web Audio API processes audio in fixed-size buffers (~92 ms at 4096 samples / 44.1 kHz). A pitch detector must run **faster than the buffer arrives** to avoid dropped frames. CREPE requires a ~90 MB model download and takes 80-150 ms per frame in WebAssembly, which is far too slow. YIN runs in **< 20 ms** and achieves comparable accuracy.
 
 ### Benchmark Results (NSynth Test Set, ~3,200 samples)
 
@@ -44,13 +62,13 @@ The Web Audio API processes audio in fixed-size buffers (~92 ms at 4096 samples 
 
 ### Window Size Trade-off
 
-A larger analysis window improves accuracy for low-frequency notes, but increases buffering latency. The chart below shows why **4096 samples** was chosen — it provides a steep accuracy gain over 2048 while keeping the buffer latency at 92.8 ms, well below the threshold of human perception.
+A larger analysis window improves accuracy for low-frequency notes, but increases buffering latency. The chart below shows why **4096 samples** was chosen: it provides a steep accuracy gain over 2048 while keeping the buffer latency at 92.8 ms, well below the threshold of human perception.
 
 ![Latency vs Accuracy Trade-off](docs/outputlat.png)
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 - **Frontend:** React + TypeScript + Vite
 - **Audio:** Web Audio API, ScriptProcessorNode / AudioWorklet
@@ -59,12 +77,12 @@ A larger analysis window improves accuracy for low-frequency notes, but increase
 
 ---
 
-## 💬 Feature Requests & Feedback
+## Feature Requests & Feedback
 
-Have an idea or found a bug? **[Open an issue](https://github.com/adityaroy10/Omnistrument/issues/new)** — all feature requests are welcome!
+Have an idea or found a bug? **[Open an issue](https://github.com/adityaroy10/Omnistrument/issues/new)** and all feature requests are welcome.
 
 ---
 
-## 📄 License
+## License
 
 MIT
