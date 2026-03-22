@@ -168,7 +168,7 @@ pitch_keycenter=${pitchkeycenter}${loopText}
   const url = URL.createObjectURL(content);
   const link = document.createElement("a");
   link.href = url;
-  link.download = "Timbre_Instrument.zip";
+  link.download = "Omnistrument_Instrument.zip";
   link.click();
   URL.revokeObjectURL(url);
 }

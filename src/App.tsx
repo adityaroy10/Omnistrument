@@ -37,10 +37,10 @@ function getClosestNoteFreq(hz: number) {
 }
 
 const tutorialSteps = [
-  { targetId: null, title: "Welcome to Timbre.", content: "This is a full-featured Pro Studio for designing virtual instruments right in your browser. Let's walk through how to build your first synth." },
+  { targetId: null, title: "Welcome to Omnistrument.", content: "This is a full-featured Pro Studio for designing virtual instruments right in your browser. Let's walk through how to build your first synth." },
   { targetId: "tour-plots", title: "1. Capture a Sound", content: "Hit the red record button and sing a note, pluck a guitar string, or hit a wine glass. The engine will instantly detect the pitch and map it across the 3-octave virtual keyboard at the bottom of your screen!" },
   { targetId: "tour-eq", title: "2. The Magic of Overtones", content: "Every sound has a hidden fingerprint of overtones (harmonics). Use the 'OVERTONES' sliders in the middle panel to selectively boost or crush the raw harmonics of your recording in real-time." },
-  { targetId: "tour-processing", title: "3. Multi-Sample Layouts", content: "Record a low note, and then record a high note. Timbre will automatically calculate the optimal split-points and build a multi-sampled instrument layout to prevent extreme chipmunk-pitch stretching." },
+  { targetId: "tour-processing", title: "3. Multi-Sample Layouts", content: "Record a low note, and then record a high note. Omnistrument will automatically calculate the optimal split-points and build a multi-sampled instrument layout to prevent extreme chipmunk-pitch stretching." },
   { targetId: "tour-envelope", title: "4. Sustain Looping & FX", content: "Build endless orchestral pads using the Sustain Looping bars, sculpt the sound with the Master EQ, and dive into huge acoustic spaces using the Reverb & Delay knobs." },
   { targetId: "tour-header", title: "5. Export and Play", content: "When your sound is perfect, hit 'Export Multi-Sample .sfz'. We will instantly compile a professional standard instrument package that you can load into any DAW (like Ableton, FL Studio, or Logic) using a free plugin like Sforzando!" }
 ];
@@ -396,7 +396,7 @@ function App() {
       )}
 
       <header id="tour-header" className={`app-header glass-panel ${activeTarget === 'tour-header' ? 'tour-highlight' : ''}`}>
-        <div className="logo">Timbre<span className="dot">.</span></div>
+        <div className="logo">Omnistrument<span className="dot">.</span></div>
         <div className="header-actions">
            <button 
              className="btn-secondary" 
