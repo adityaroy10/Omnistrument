@@ -1,0 +1,5 @@
+fix: monorepo build orchestration for Vercel
+
+- Added root package.json for build delegation
+- Added root vercel.json for output directory configuration
+- Deleted redundant app/vercel.json

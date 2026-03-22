@@ -1,0 +1,11 @@
+{
+  "name": "omnistrument-monorepo",
+  "private": true,
+  "scripts": {
+    "install-all": "npm install --prefix app && npm install --prefix packages/omnistrument-core",
+    "build-core": "npm run build --prefix packages/omnistrument-core",
+    "build-app": "npm run build --prefix app",
+    "build": "npm run install-all && npm run build-core && npm run build-app",
+    "dev": "npm run dev --prefix app"
+  }
+}
