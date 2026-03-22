@@ -1,0 +1,40 @@
+{
+  "name": "omnistrument-core",
+  "version": "1.0.0",
+  "description": "Core SDK for Omnistrument – real-time pitch detection (YIN) and SFZ instrument generation",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./widget": "./dist/widget.js"
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsup src/index.ts src/widget.ts --format cjs,esm --dts --out-dir dist",
+    "test": "jest --coverage",
+    "test:watch": "jest --watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": ["pitch-detection", "yin", "sfz", "sampler", "web-audio", "music"],
+  "author": "Aditya Roy",
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "@types/jest": "^29.5.12",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.4",
+    "tsup": "^8.0.2",
+    "typescript": "^5.4.5"
+  },
+  "jest": {
+    "preset": "ts-jest",
+    "testEnvironment": "node",
+    "testMatch": ["**/__tests__/**/*.test.ts"],
+    "coverageDirectory": "coverage",
+    "collectCoverageFrom": ["src/**/*.ts", "!src/widget.ts"]
+  }
+}

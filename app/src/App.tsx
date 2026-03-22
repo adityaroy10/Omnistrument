@@ -5,6 +5,45 @@ import { detectPitch, drawWaveformCanvas } from './pitchDetect';
 import { useSynthPlayback } from './useSynthPlayback';
 import { exportSfzInstrument } from './exportUtils';
 
+// ─── Persistence types ────────────────────────────────────────────────────────
+interface InstrumentSettings {
+  harmonics: number[];
+  attack: number;
+  release: number;
+  attackShape: 'linear' | 'analog';
+  releaseShape: 'linear' | 'analog';
+  flux: number;
+  loopEnabled: boolean;
+  loopStartRatio: number;
+  loopEndRatio: number;
+  eqLow: number;
+  eqMid: number;
+  eqHigh: number;
+}
+
+interface SavedInstrument {
+  id: string;
+  name: string;
+  author: string;
+  tags: string[];
+  savedAt: number;
+  settings: InstrumentSettings;
+}
+
+const LIBRARY_KEY = 'omnistrument_library';
+
+function loadLibrary(): SavedInstrument[] {
+  try {
+    return JSON.parse(localStorage.getItem(LIBRARY_KEY) || '[]');
+  } catch {
+    return [];
+  }
+}
+
+function saveLibrary(items: SavedInstrument[]) {
+  localStorage.setItem(LIBRARY_KEY, JSON.stringify(items));
+}
+
 export interface Sample {
   id: string;
   buffer: AudioBuffer;
@@ -156,6 +195,14 @@ function App() {
   const [showTutorial, setShowTutorial] = useState(() => !localStorage.getItem('hasSeenTutorial'));
   const [tutorialStep, setTutorialStep] = useState(0);
   const [modalStyle, setModalStyle] = useState<React.CSSProperties>({ opacity: 0 });
+
+  // Save Modal + Library
+  const [showSaveModal, setShowSaveModal] = useState(false);
+  const [showLibrary, setShowLibrary] = useState(false);
+  const [saveName, setSaveName] = useState('');
+  const [saveAuthor, setSaveAuthor] = useState('');
+  const [saveTags, setSaveTags] = useState('');
+  const [library, setLibrary] = useState<SavedInstrument[]>(loadLibrary);
 
   useEffect(() => {
     if (!showTutorial) return;
@@ -350,8 +397,143 @@ function App() {
     setShowTutorial(false);
   };
 
+  const currentSettings: InstrumentSettings = {
+    harmonics, attack, release, attackShape, releaseShape,
+    flux, loopEnabled, loopStartRatio, loopEndRatio, eqLow, eqMid, eqHigh
+  };
+
+  const handleSaveToLibrary = () => {
+    const entry: SavedInstrument = {
+      id: Date.now().toString(),
+      name: saveName.trim() || 'Untitled Instrument',
+      author: saveAuthor.trim(),
+      tags: saveTags.split(',').map(t => t.trim()).filter(Boolean),
+      savedAt: Date.now(),
+      settings: currentSettings,
+    };
+    const updated = [entry, ...library];
+    setLibrary(updated);
+    saveLibrary(updated);
+    setShowSaveModal(false);
+  };
+
+  const handleExportFromModal = () => {
+    exportSfzInstrument(
+      samples, harmonics, attack, release, attackShape, releaseShape,
+      flux, loopEnabled, loopStartRatio, loopEndRatio, eqLow, eqMid, eqHigh
+    );
+    setShowSaveModal(false);
+  };
+
+  const applyLibraryItem = (item: SavedInstrument) => {
+    const s = item.settings;
+    setHarmonics(s.harmonics);
+    setAttack(s.attack);
+    setRelease(s.release);
+    setAttackShape(s.attackShape);
+    setReleaseShape(s.releaseShape);
+    setFlux(s.flux);
+    setLoopEnabled(s.loopEnabled);
+    setLoopStartRatio(s.loopStartRatio);
+    setLoopEndRatio(s.loopEndRatio);
+    setEqLow(s.eqLow);
+    setEqMid(s.eqMid);
+    setEqHigh(s.eqHigh);
+  };
+
+  const deleteLibraryItem = (id: string) => {
+    const updated = library.filter(i => i.id !== id);
+    setLibrary(updated);
+    saveLibrary(updated);
+  };
+
   return (
     <div className="app-container">
+      {/* ── Save Modal ─────────────────────────────────────────────── */}
+      {showSaveModal && (
+        <div className="save-modal-overlay" onClick={() => setShowSaveModal(false)}>
+          <div className="save-modal glass-panel" onClick={e => e.stopPropagation()}>
+            <div className="save-modal-header">
+              <h3>Export Instrument</h3>
+              <button className="modal-close" onClick={() => setShowSaveModal(false)}>×</button>
+            </div>
+            <div className="save-modal-body">
+              <label className="save-label">
+                Instrument Name
+                <input
+                  className="save-input"
+                  placeholder="e.g. Ceramic Mug Pad"
+                  value={saveName}
+                  onChange={e => setSaveName(e.target.value)}
+                  autoFocus
+                />
+              </label>
+              <label className="save-label">
+                Author
+                <input
+                  className="save-input"
+                  placeholder="Your name"
+                  value={saveAuthor}
+                  onChange={e => setSaveAuthor(e.target.value)}
+                />
+              </label>
+              <label className="save-label">
+                Tags <span style={{color:'var(--text-secondary)',fontWeight:400}}>(comma separated)</span>
+                <input
+                  className="save-input"
+                  placeholder="cinematic, pad, organic"
+                  value={saveTags}
+                  onChange={e => setSaveTags(e.target.value)}
+                />
+              </label>
+              <p className="save-note">DSP settings are saved to your library. Re-record samples to re-export.</p>
+            </div>
+            <div className="save-modal-footer">
+              <button className="btn-secondary save-btn-secondary" onClick={handleSaveToLibrary}>
+                Save to Library
+              </button>
+              <button className="btn-primary save-btn-primary" onClick={handleExportFromModal}>
+                Export .zip
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Library Sidebar ────────────────────────────────────────── */}
+      {showLibrary && (
+        <div className="library-panel glass-panel">
+          <div className="library-header">
+            <h3>My Library</h3>
+            <button className="modal-close" onClick={() => setShowLibrary(false)}>×</button>
+          </div>
+          {library.length === 0 ? (
+            <p className="library-empty">No saved instruments yet. Export one to get started.</p>
+          ) : (
+            <div className="library-list">
+              {library.map(item => (
+                <div key={item.id} className="library-card">
+                  <div className="library-card-info">
+                    <div className="library-card-name">{item.name}</div>
+                    {item.author && <div className="library-card-author">{item.author}</div>}
+                    {item.tags.length > 0 && (
+                      <div className="library-card-tags">
+                        {item.tags.map(t => <span key={t} className="library-tag">{t}</span>)}
+                      </div>
+                    )}
+                    <div className="library-card-date">{new Date(item.savedAt).toLocaleDateString()}</div>
+                  </div>
+                  <div className="library-card-actions">
+                    <button className="lib-btn" onClick={() => applyLibraryItem(item)} title="Load settings">Load</button>
+                    <button className="lib-btn lib-btn-danger" onClick={() => deleteLibraryItem(item.id)} title="Delete">×</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       {showTutorial && (
         <div className="tutorial-overlay">
            <div className="tutorial-modal glass-panel" style={modalStyle}>
@@ -416,7 +598,7 @@ function App() {
            <button 
              className="btn-primary" 
              disabled={!hasRecorded || isAnalyzing}
-             onClick={() => exportSfzInstrument(samples, harmonics, attack, release, attackShape, releaseShape, flux, loopEnabled, loopStartRatio, loopEndRatio, eqLow, eqMid, eqHigh)}
+             onClick={() => setShowSaveModal(true)}
            >
              Export Multi-Sample .sfz
            </button>

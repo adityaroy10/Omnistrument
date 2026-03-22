@@ -1,0 +1,9 @@
+torch
+torchaudio
+librosa
+notebook
+matplotlib
+seaborn
+numpy
+pandas
+tqdm
